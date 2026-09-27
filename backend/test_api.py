@@ -1,0 +1,66 @@
+import sys
+import os
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from fastapi.testclient import TestClient
+from app.main import app
+
+def run_tests():
+    client = TestClient(app)
+    
+    print("[1/5] Testing GET /health...")
+    res = client.get("/health")
+    assert res.status_code == 200, f"Health check failed: {res.text}"
+    assert res.json()["status"] == "healthy"
+    print("  -> Health OK:", res.json())
+    
+    print("\n[2/5] Testing GET /model-info...")
+    res = client.get("/model-info")
+    assert res.status_code == 200
+    data = res.json()
+    assert "model_name" in data
+    print("  -> Model Info OK. Model Name:", data["model_name"])
+    
+    print("\n[3/5] Testing POST /predict (Real review)...")
+    res = client.post("/predict", json={
+        "review": "The battery life lasts about 24 hours on medium volume. The plastic headband feels slightly cheap but overall solid for the price."
+    })
+    assert res.status_code == 200
+    pred = res.json()
+    print("  -> Real Review Prediction:", pred["prediction"], "Confidence:", pred["confidence"])
+    
+    print("\n[4/5] Testing POST /predict (Fake review)...")
+    res = client.post("/predict", json={
+        "review": "BEST ITEM EVER IN THE WORLD BUY NOW BUY NOW 1000 STARS PERFECT UNBELIEVABLE WOW FREE GIFT!!!"
+    })
+    assert res.status_code == 200
+    pred2 = res.json()
+    print("  -> Fake Review Prediction:", pred2["prediction"], "Confidence:", pred2["confidence"])
+    
+    print("\n[5/6] Testing GET /metrics...")
+    res = client.get("/metrics")
+    assert res.status_code == 200
+    metrics = res.json()
+    print("  -> Metrics OK. Total Predictions:", metrics["total_predictions"])
+    
+    print("\n[6/6] Testing POST /predict-file with sample reviews...")
+    sample_file_path = os.path.join(PROJECT_ROOT, "data", "reviews.csv")
+    with open(sample_file_path, "rb") as f:
+        res = client.post(
+            "/predict-file",
+            files={"file": ("reviews.csv", f, "text/csv")},
+            data={"review_column": "review_text", "label_column": "label", "clean_empty": "true"}
+        )
+    assert res.status_code == 200, f"Predict file error: {res.text}"
+    file_res = res.json()
+    print("  -> File Prediction OK. Total Processed:", file_res["summary"]["total_reviews"])
+    print("     Fake %:", file_res["summary"]["fake_percentage"])
+    print("     Accuracy:", file_res["summary"]["accuracy"])
+    
+    print("\nALL BACKEND API TESTS PASSED SUCCESSFULLY! [SUCCESS]")
+
+if __name__ == "__main__":
+    run_tests()

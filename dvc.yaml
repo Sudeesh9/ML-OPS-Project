@@ -1,0 +1,17 @@
+stages:
+  train:
+    cmd: python model/train.py
+    deps:
+      - data/reviews.csv
+      - model/train.py
+      - backend/app/preprocessing/text_cleaner.py
+    params:
+      - train.algorithm
+      - train.ngram_range
+      - train.max_features
+      - train.reg_c
+    outs:
+      - model/model.joblib
+    metrics:
+      - model/model_config.json:
+          cache: false

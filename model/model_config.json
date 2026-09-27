@@ -1,0 +1,54 @@
+{
+  "model_name": "Fake Review Classifier",
+  "version": "v1.0",
+  "framework": "Scikit-learn / NLP",
+  "task": "Binary Text Classification (Real vs Fake)",
+  "status": "Active",
+  "model_file": "model.joblib",
+  "algorithm": "TF-IDF Vectorizer + Calibrated Logistic Regression",
+  "bert_compatible": true,
+  "bert_adapter_available": true,
+  "bert_upgrade_instructions": "To switch to Hugging Face BERT, place transformer weights in model/weights/ and set model_type='bert' in model_config.json",
+  "vocabulary_size": 973,
+  "training_samples": 22,
+  "test_samples": 8,
+  "last_trained": "2026-09-27T19:00:27.065180",
+  "hyperparameters": {
+    "ngram_range": [
+      1,
+      2
+    ],
+    "max_features": 5000,
+    "C": 1.5,
+    "random_state": 42
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "roc_auc": 1.0,
+    "confusion_matrix": [
+      [
+        4,
+        0
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "training_duration_seconds": 0.007
+  },
+  "mlflow": {
+    "enabled": true,
+    "experiment_name": "fake-review-detection",
+    "run_id": "8c6694bb349b482e8c484b32f9501455",
+    "experiment_id": "1"
+  },
+  "dvc": {
+    "tracked_file": "data/reviews.csv",
+    "pipeline_stage": "train",
+    "version": "v1.0"
+  }
+}

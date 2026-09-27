@@ -1,0 +1,21 @@
+base:
+  project: "fake-review-detection"
+  random_seed: 42
+
+data:
+  dataset_path: "data/reviews.csv"
+  test_size: 0.25
+  review_column: "review_text"
+  label_column: "label"
+
+train:
+  algorithm: "tfidf_logistic_regression"
+  ngram_range: [1, 2]
+  max_features: 5000
+  reg_c: 1.5
+  max_iter: 1000
+  class_weight: "balanced"
+
+mlflow:
+  experiment_name: "fake-review-detection"
+  artifact_location: "mlruns"
