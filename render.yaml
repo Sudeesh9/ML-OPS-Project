@@ -1,0 +1,33 @@
+services:
+  # Backend API Service
+  - type: web
+    name: fake-review-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r backend/requirements.txt && python model/train.py"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PYTHONPATH
+        value: "/opt/render/project/src/backend:/opt/render/project/src"
+
+  # Frontend Static Site
+  - type: web
+    name: fake-review-frontend
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: "./frontend/dist"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: fake-review-backend
+          property: host
