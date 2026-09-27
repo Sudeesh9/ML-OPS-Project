@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.db
+mlflow.db
 env/
 venv/
 ENV/
