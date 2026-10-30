@@ -84,6 +84,15 @@ def get_mlops_info():
             "framework": model_cfg.get("framework", "Scikit-learn / NLP"),
             "bert_ready": model_cfg.get("bert_compatible", True)
         },
+        "evidently": {
+            "status": "Active",
+            "framework": "Evidently AI",
+            "version": "0.7.23",
+            "capabilities": ["Data Drift Detection", "Data Quality", "Target Drift", "Interactive HTML Reports"],
+            "reference_dataset": "data/reviews.csv",
+            "report_url": "/evidently/drift-report",
+            "summary_url": "/evidently/drift-summary"
+        },
         "ci_cd": {
             "provider": "GitHub Actions",
             "workflow_file": ".github/workflows/ci.yml",

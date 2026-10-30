@@ -13,7 +13,7 @@ if BACKEND_DIR not in sys.path:
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from app.routes import health, predict, model_info, metrics
+from app.routes import health, predict, model_info, metrics, evidently_routes
 from app.services.ml_service import ml_service
 
 app = FastAPI(
@@ -38,6 +38,7 @@ app.include_router(health.router)
 app.include_router(predict.router)
 app.include_router(model_info.router)
 app.include_router(metrics.router)
+app.include_router(evidently_routes.router)
 
 @app.get("/")
 def read_root():
@@ -48,6 +49,8 @@ def read_root():
         "health": "/health",
         "metrics": "/metrics",
         "model_info": "/model-info",
+        "evidently_drift_summary": "/evidently/drift-summary",
+        "evidently_drift_report": "/evidently/drift-report",
         "disclaimer": "Predictions are model-generated estimates and should not be treated as definitive proof of review authenticity."
     }
 

@@ -46,7 +46,7 @@ def run_tests():
     metrics = res.json()
     print("  -> Metrics OK. Total Predictions:", metrics["total_predictions"])
     
-    print("\n[6/6] Testing POST /predict-file with sample reviews...")
+    print("\n[6/7] Testing POST /predict-file with sample reviews...")
     sample_file_path = os.path.join(PROJECT_ROOT, "data", "reviews.csv")
     with open(sample_file_path, "rb") as f:
         res = client.post(
@@ -60,7 +60,21 @@ def run_tests():
     print("     Fake %:", file_res["summary"]["fake_percentage"])
     print("     Accuracy:", file_res["summary"]["accuracy"])
     
-    print("\nALL BACKEND API TESTS PASSED SUCCESSFULLY! [SUCCESS]")
+    print("\n[7/7] Testing Evidently AI endpoints (/evidently/status, /evidently/drift-summary, /evidently/drift-report)...")
+    res_ev_status = client.get("/evidently/status")
+    assert res_ev_status.status_code == 200
+    print("  -> Evidently Status OK:", res_ev_status.json()["status"], "Version:", res_ev_status.json()["version"])
+    
+    res_ev_drift = client.get("/evidently/drift-summary")
+    assert res_ev_drift.status_code == 200
+    print("  -> Evidently Drift Summary OK. Drift Share:", res_ev_drift.json()["drift_share"])
+    
+    res_ev_html = client.get("/evidently/drift-report")
+    assert res_ev_html.status_code == 200
+    assert "html" in res_ev_html.headers.get("content-type", "").lower()
+    print("  -> Evidently HTML Report OK. Byte length:", len(res_ev_html.content))
+
+    print("\nALL BACKEND & EVIDENTLY API TESTS PASSED SUCCESSFULLY! [SUCCESS]")
 
 if __name__ == "__main__":
     run_tests()

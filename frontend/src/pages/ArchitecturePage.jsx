@@ -89,8 +89,8 @@ export default function ArchitecturePage() {
 
           <ArrowDown className="w-5 h-5 text-slate-600" />
 
-          {/* Layer 6: MLOps Triple Pillars */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Layer 6: MLOps Pillars */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <div className="p-4 rounded-2xl bg-sky-950/20 border border-sky-800/30 text-center">
               <Activity className="w-5 h-5 text-sky-400 mx-auto mb-1.5" />
@@ -110,7 +110,15 @@ export default function ArchitecturePage() {
 
             <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-800/30 text-center">
               <Activity className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
-              <div className="font-bold text-emerald-300 mb-0.5">Monitoring</div>
+              <div className="font-bold text-emerald-300 mb-0.5">Evidently AI</div>
+              <div className="text-[10px] text-slate-400">
+                Feature & dataset drift analysis, Kolmogorov-Smirnov statistical tests, visual reports
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-violet-950/20 border border-violet-800/30 text-center">
+              <Server className="w-5 h-5 text-violet-400 mx-auto mb-1.5" />
+              <div className="font-bold text-violet-300 mb-0.5">Runtime Monitoring</div>
               <div className="text-[10px] text-slate-400">
                 Live request counters, latency telemetry, Prometheus /metrics exposition
               </div>
@@ -171,6 +179,19 @@ export default function ArchitecturePage() {
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               GitHub Actions workflow (<code className="text-emerald-300 font-mono">.github/workflows/ci.yml</code>) runs automated flake8 linting, model retraining verification, backend test suites, and multi-stage container builds. Deployable instantly with <code className="text-emerald-300 font-mono">docker compose up --build</code>.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 md:col-span-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <Activity className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-slate-200">5. Evidently AI Data Drift & Distribution Guardrails</h4>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Real-time monitoring using <code className="text-emerald-300 font-mono">Evidently AI</code> compares incoming/uploaded customer reviews against the baseline reference dataset (<code className="text-emerald-300 font-mono">data/reviews.csv</code>). 
+              Evaluates linguistic attributes (character length, word count, exclamation frequency, capitalization shouting ratio) using two-sample <strong>Kolmogorov-Smirnov (K-S)</strong> and <strong>Chi-Square</strong> tests to flag distributional shift and data drift before model decay occurs.
             </p>
           </div>
         </div>

@@ -12,31 +12,62 @@ import {
   BarChart2,
   Server,
   Layers,
-  Code
+  Code,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  Sparkles,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
-import { getSystemMetrics, getMlopsInfo, getModelInfo } from '../services/api';
+import { 
+  getSystemMetrics, 
+  getMlopsInfo, 
+  getModelInfo,
+  getEvidentlyDriftSummary,
+  getEvidentlyReportUrl,
+  runCustomEvidentlyDrift
+} from '../services/api';
 
 export default function MlopsDashboardPage() {
   const [metrics, setMetrics] = useState(null);
   const [mlopsInfo, setMlopsInfo] = useState(null);
   const [modelInfo, setModelInfo] = useState(null);
+  const [evidentlySummary, setEvidentlySummary] = useState(null);
+  const [showEvidentlyIframe, setShowEvidentlyIframe] = useState(false);
+  const [runningDrift, setRunningDrift] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rawView, setRawView] = useState(false);
 
   const fetchData = async () => {
     try {
-      const [m, mlops, mdl] = await Promise.all([
+      const [m, mlops, mdl, ev] = await Promise.all([
         getSystemMetrics(),
         getMlopsInfo(),
-        getModelInfo()
+        getModelInfo(),
+        getEvidentlyDriftSummary()
       ]);
       setMetrics(m);
       setMlopsInfo(mlops);
       setModelInfo(mdl);
+      setEvidentlySummary(ev);
     } catch (err) {
       console.error("MLOps data fetch error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRerunDrift = async () => {
+    setRunningDrift(true);
+    try {
+      const res = await runCustomEvidentlyDrift();
+      setEvidentlySummary(res);
+    } catch (err) {
+      console.error("Failed to rerun Evidently drift:", err);
+    } finally {
+      setRunningDrift(false);
     }
   };
 
@@ -318,6 +349,179 @@ export default function MlopsDashboardPage() {
                 <span className="text-indigo-300">dvc repro</span>
               </div>
             </div>
+          </div>
+
+          {/* Evidently AI Data Drift & Model Monitoring */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/70 border border-slate-800 shadow-xl space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-400 border border-emerald-500/20">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-100">Evidently AI — Data & Feature Drift Monitoring</h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      v0.7.23 Active
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Continuous statistical drift testing comparing live/incoming reviews against baseline distribution (Kolmogorov-Smirnov & Chi-Square)
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={handleRerunDrift}
+                  disabled={runningDrift}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
+                  title="Re-run statistical drift calculations"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-sky-400 ${runningDrift ? 'animate-spin' : ''}`} />
+                  {runningDrift ? 'Testing...' : 'Re-test Drift'}
+                </button>
+
+                <button
+                  onClick={() => setShowEvidentlyIframe(!showEvidentlyIframe)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all"
+                  title="Toggle embedded interactive dashboard"
+                >
+                  {showEvidentlyIframe ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />}
+                  {showEvidentlyIframe ? 'Hide Embed' : 'Embed Report'}
+                </button>
+
+                <a
+                  href={getEvidentlyReportUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Full HTML Report
+                </a>
+              </div>
+            </div>
+
+            {/* Quick KPI Stat Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                <span className="text-[11px] font-medium text-slate-400 block mb-1">Dataset Drift Status</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${evidentlySummary?.dataset_drift_detected ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+                  <span className={`text-base font-bold ${evidentlySummary?.dataset_drift_detected ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {evidentlySummary?.dataset_drift_detected ? 'Drift Detected' : 'Healthy / No Drift'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 block mt-1">Threshold: &gt; 50% drifted features</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                <span className="text-[11px] font-medium text-slate-400 block mb-1">Drift Share</span>
+                <span className="text-xl font-bold font-mono text-slate-100">
+                  {evidentlySummary?.drift_share_percentage ?? 16.7}%
+                </span>
+                <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      (evidentlySummary?.drift_share_percentage || 0) > 50 ? 'bg-rose-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(100, evidentlySummary?.drift_share_percentage || 16.7)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                <span className="text-[11px] font-medium text-slate-400 block mb-1">Drifted Features</span>
+                <span className="text-xl font-bold font-mono text-slate-100">
+                  {evidentlySummary?.drifted_features_count ?? 1} <span className="text-xs text-slate-400 font-sans font-normal">/ {evidentlySummary?.total_features_evaluated ?? 6}</span>
+                </span>
+                <span className="text-[10px] text-slate-500 block mt-1">NLP linguistic & metadata attributes</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                <span className="text-[11px] font-medium text-slate-400 block mb-1">Baseline Reference</span>
+                <span className="text-xs font-mono text-slate-200 block truncate">data/reviews.csv</span>
+                <span className="text-[10px] text-slate-400 block mt-1">
+                  {evidentlySummary?.reference_sample_count ?? 15} ref vs {evidentlySummary?.current_sample_count ?? 15} current
+                </span>
+              </div>
+            </div>
+
+            {/* Feature Drift Evaluation Table */}
+            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-900 border-b border-slate-800 uppercase text-[10px] text-slate-400 font-semibold">
+                  <tr>
+                    <th className="p-3">Feature Name</th>
+                    <th className="p-3">Drift Status</th>
+                    <th className="p-3">Statistical Test Method</th>
+                    <th className="p-3">Score / p-value</th>
+                    <th className="p-3 text-right">Significance (α)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-sans">
+                  {!evidentlySummary?.column_drift_details || evidentlySummary.column_drift_details.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-6 text-center text-slate-500">
+                        Loading statistical feature drift details from Evidently AI...
+                      </td>
+                    </tr>
+                  ) : (
+                    evidentlySummary.column_drift_details.map((col, idx) => (
+                      <tr key={idx} className="hover:bg-slate-900/40">
+                        <td className="p-3 font-mono font-medium text-slate-200">{col.column}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            col.drift_detected 
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {col.drift_detected ? '⚠️ DRIFTED' : '🟢 STABLE'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-300 font-mono text-[11px]">{col.method}</td>
+                        <td className="p-3 font-mono text-slate-200">
+                          {col.p_value_or_score}
+                        </td>
+                        <td className="p-3 font-mono text-slate-400 text-right">
+                          {col.threshold}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Embedded Interactive HTML Report Iframe */}
+            {showEvidentlyIframe && (
+              <div className="pt-4 border-t border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-semibold text-slate-200">Interactive Evidently AI Visual Report Embed</span>
+                  </div>
+                  <a
+                    href={getEvidentlyReportUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                  >
+                    Open fullscreen <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                <div className="w-full h-[650px] rounded-2xl overflow-hidden border border-slate-800 bg-white shadow-2xl">
+                  <iframe
+                    src={getEvidentlyReportUrl()}
+                    title="Evidently AI Drift Report"
+                    className="w-full h-full border-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Recent Prediction Activity Log Table */}

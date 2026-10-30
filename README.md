@@ -295,6 +295,13 @@ The backend tracks real-time prediction volume, latency, and fake/real distribut
 - JSON format: `GET /metrics`
 - Prometheus exposition format: `GET /metrics?format=prometheus`
 
+### Evidently AI Data Drift & Distribution Guardrails
+Evidently AI continuously analyzes live inference inputs and uploaded batches against baseline distributions:
+- **Interactive Visual HTML Report**: `GET /evidently/drift-report` (open in browser or embed in iframe)
+- **Structured Drift Metrics (JSON)**: `GET /evidently/drift-summary`
+- **Evaluated NLP Attributes**: Character length, word count, exclamation frequency, caps ratio, rating, and label using two-sample **Kolmogorov-Smirnov (K-S)** and **Chi-Square** statistical tests.
+- **On-Demand Drift Computation**: `POST /evidently/run-drift` with custom datasets.
+
 ---
 
 ## 9. Docker & Containerization
