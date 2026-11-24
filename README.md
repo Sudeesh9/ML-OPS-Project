@@ -34,8 +34,10 @@ Designed specifically for college capstone demonstrations, technical portfolios,
   - [Real-Time Monitoring & Prometheus Metrics](#real-time-monitoring--prometheus-metrics)
 - [9. Docker & Containerization](#9-docker--containerization)
 - [10. CI/CD with GitHub Actions](#10-cicd-with-github-actions)
-- [11. API Documentation](#11-api-documentation)
-- [12. Model Safety & Disclaimer](#12-model-safety--disclaimer)
+- [11. Deployment to Render](#11-deployment-to-render)
+- [12. API Documentation](#12-api-documentation)
+- [13. Model Safety & Disclaimer](#13-model-safety--disclaimer)
+- [14. License](#14-license)
 
 ---
 
@@ -333,7 +335,72 @@ The automated workflow located at `.github/workflows/ci.yml` triggers on every p
 
 ---
 
-## 11. API Documentation
+## 11. Deployment to Render
+
+The repository includes a ready-to-use Render Blueprint (`render.yaml`) that configures both the **FastAPI Backend** (Python Web Service) and the **React Frontend** (Static Site) with automated cross-service URL injection and health checks.
+
+### Option A: One-Click Blueprint Deployment (Recommended)
+
+1. **Push code to GitHub**:
+   Ensure all changes are pushed to your GitHub repository:
+   ```bash
+   git push origin main
+   ```
+2. **Open Render Dashboard**:
+   Go to [dashboard.render.com](https://dashboard.render.com) and sign in.
+3. **Deploy Blueprint**:
+   - Click **New +** in the top navigation bar.
+   - Select **Blueprint**.
+   - Connect your GitHub repository (`ML-OPS-Project`).
+   - Render automatically reads `render.yaml` and prepares:
+     - `fake-review-backend`: Python Web Service running FastAPI with automatic model training on build.
+     - `fake-review-frontend`: Static Site running Vite React with SPA routing rewrite (`/* -> /index.html`).
+   - Click **Apply**.
+4. Both services will build and deploy automatically within 2–3 minutes. The frontend's `VITE_API_URL` is automatically wired to the live backend URL via `fromService`.
+
+---
+
+### Option B: Manual Service Creation
+
+If you prefer configuring services manually in the Render UI:
+
+#### 1. Backend Service (FastAPI Web Service)
+- **Service Type**: Web Service
+- **Runtime**: `Python`
+- **Region**: `Oregon` (or your preferred region)
+- **Build Command**:
+  ```bash
+  pip install --no-cache-dir -r backend/requirements.txt && python model/train.py
+  ```
+- **Start Command**:
+  ```bash
+  cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  ```
+- **Health Check Path**: `/health`
+- **Environment Variables**:
+  - `PYTHON_VERSION`: `3.12.0`
+  - `PYTHONPATH`: `/opt/render/project/src/backend:/opt/render/project/src`
+
+#### 2. Frontend Service (Static Site)
+- **Service Type**: Static Site
+- **Build Command**:
+  ```bash
+  cd frontend && npm install && npm run build
+  ```
+- **Publish Directory**:
+  ```bash
+  ./frontend/dist
+  ```
+- **Redirects / Rewrites**:
+  - Type: `Rewrite`
+  - Source: `/*`
+  - Destination: `/index.html`
+- **Environment Variables**:
+  - `VITE_API_URL`: `https://fake-review-backend.onrender.com` *(replace with your actual backend URL)*
+
+---
+
+## 12. API Documentation
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -375,13 +442,13 @@ Content-Type: application/json
 
 ---
 
-## 12. Model Safety & Disclaimer
+## 13. Model Safety & Disclaimer
 
 > [!NOTE]
 > Predictions are model-generated estimates and should not be treated as definitive proof of review authenticity. Authenticity scores represent probabilistic likelihoods based on linguistic patterns, vocabulary usage, and stylistic markers.
 
 ---
 
-## 13. License
+## 14. License
 
 Distributed under the MIT License.

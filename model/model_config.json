@@ -12,7 +12,7 @@
   "vocabulary_size": 973,
   "training_samples": 22,
   "test_samples": 8,
-  "last_trained": "2026-09-28T15:03:18.871373",
+  "last_trained": "2026-11-24T09:53:54.285845",
   "hyperparameters": {
     "ngram_range": [
       1,
@@ -38,12 +38,12 @@
         4
       ]
     ],
-    "training_duration_seconds": 0.0054
+    "training_duration_seconds": 0.006
   },
   "mlflow": {
     "enabled": true,
     "experiment_name": "fake-review-detection",
-    "run_id": "dc0f76949ddb4707bda7abbfb4fd1a34",
+    "run_id": "c89d635740c34844b5299b8463b1ad5a",
     "experiment_id": "1"
   },
   "dvc": {

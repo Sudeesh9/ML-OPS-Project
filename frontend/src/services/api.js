@@ -1,4 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Resolve API URL with protocol formatting & trailing slash normalization
+const RAW_API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
+const FORMATTED_API_URL = (!RAW_API_URL.startsWith('http://') && !RAW_API_URL.startsWith('https://'))
+  ? `https://${RAW_API_URL}`
+  : RAW_API_URL;
+const API_BASE_URL = FORMATTED_API_URL.replace(/\/+$/, '');
 
 // Offline client-side linguistic evaluation engine (fallback if remote backend is asleep/offline)
 const SUSPICIOUS_WORDS = [
