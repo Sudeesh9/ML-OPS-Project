@@ -31,10 +31,10 @@ COPY --from=frontend-builder /frontend/dist /app/frontend/dist
 ENV PYTHONPATH="/app/backend:/app"
 ENV PYTHONUNBUFFERED=1
 
-ENV PORT=8080
-EXPOSE 8080
+ENV PORT=10000
+EXPOSE 10000
 
 # Train / verify model
 RUN python /app/model/train.py
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
