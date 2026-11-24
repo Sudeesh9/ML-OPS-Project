@@ -1,5 +1,8 @@
 // Resolve API URL with protocol formatting & trailing slash normalization
-const RAW_API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
+const DEFAULT_API_URL = typeof window !== 'undefined' && window.location.origin
+  ? window.location.origin
+  : 'http://localhost:8000';
+const RAW_API_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).trim();
 const FORMATTED_API_URL = (!RAW_API_URL.startsWith('http://') && !RAW_API_URL.startsWith('https://'))
   ? `https://${RAW_API_URL}`
   : RAW_API_URL;
