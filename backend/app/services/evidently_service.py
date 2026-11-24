@@ -4,8 +4,22 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 import pandas as pd
 
-from evidently import Report
-from evidently.presets import DataDriftPreset, DataSummaryPreset
+# Compatibility patch for evidently with pandas >= 3.0
+try:
+    import pandas.core.dtypes.common as _pd_common
+    if not hasattr(_pd_common, "infer_dtype_from_object"):
+        from pandas.api.types import infer_dtype
+        _pd_common.infer_dtype_from_object = lambda val: (infer_dtype([val], skipna=False), None)
+except Exception:
+    pass
+
+try:
+    from evidently import Report
+    from evidently.presets import DataDriftPreset, DataSummaryPreset
+    EVIDENTLY_LOADED = True
+except Exception as e:
+    EVIDENTLY_LOADED = False
+    print(f"Evidently presets warning: {e}")
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))

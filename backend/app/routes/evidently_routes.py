@@ -2,9 +2,26 @@ import io
 import pandas as pd
 from typing import Optional
 from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException
-import evidently
 
-from app.services.evidently_service import evidently_service
+# Compatibility patch for evidently with pandas >= 3.0
+try:
+    import pandas.core.dtypes.common as _pd_common
+    if not hasattr(_pd_common, "infer_dtype_from_object"):
+        from pandas.api.types import infer_dtype
+        _pd_common.infer_dtype_from_object = lambda val: (infer_dtype([val], skipna=False), None)
+except Exception:
+    pass
+
+try:
+    import evidently
+    EVIDENTLY_VERSION = getattr(evidently, "__version__", "0.7.23")
+    from app.services.evidently_service import evidently_service
+    EVIDENTLY_AVAILABLE = True
+except Exception as e:
+    EVIDENTLY_AVAILABLE = False
+    EVIDENTLY_VERSION = "unavailable"
+    evidently_service = None
+    print(f"Evidently routes warning: {e}")
 
 router = APIRouter(prefix="/evidently", tags=["Evidently AI Monitoring"])
 
@@ -14,16 +31,16 @@ def get_evidently_status():
     Returns Evidently AI monitoring engine status and version.
     """
     return {
-        "status": "active",
+        "status": "active" if EVIDENTLY_AVAILABLE else "degraded",
         "service": "Evidently AI Drift & Data Quality",
-        "version": evidently.__version__,
+        "version": EVIDENTLY_VERSION,
         "reference_dataset": "data/reviews.csv",
         "available_presets": [
             "DataDriftPreset",
             "DataSummaryPreset"
         ],
-        "cached_report_ready": evidently_service._cached_html is not None,
-        "last_generated": evidently_service._last_generated
+        "cached_report_ready": (evidently_service._cached_html is not None) if evidently_service else False,
+        "last_generated": evidently_service._last_generated if evidently_service else None
     }
 
 @router.get("/drift-summary")
