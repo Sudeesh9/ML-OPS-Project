@@ -1,10 +1,15 @@
 services:
-  # Unified Docker Web Service (Hosts React Frontend + FastAPI Backend together)
+  # Unified Web Service (FastAPI Backend + React Frontend bundled)
   - type: web
-    name: fake-review-detection
-    runtime: docker
-    plan: free
+    name: fake-review-backend
+    runtime: python
     region: oregon
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    plan: free
     healthCheckPath: /health
+    buildCommand: "pip install --no-cache-dir -r backend/requirements.txt && python model/train.py"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PYTHONPATH
+        value: "/opt/render/project/src/backend:/opt/render/project/src"
